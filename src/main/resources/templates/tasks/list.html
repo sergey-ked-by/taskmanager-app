@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>My Tasks</title></head>
+<body>
+<div layout:fragment="content">
+    <h1>My Tasks</h1>
+    <a th:href="@{/tasks/create}" class="btn btn-success mb-3">Create New Task</a>
+    <div th:fragment="task_list(tasks)">
+        <div th:if="${tasks.isEmpty()}"><p>You don't have any tasks yet</p></div>
+        <table th:if="${!tasks.isEmpty()}" class="table table-striped">
+            <thead><tr><th>Title</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            <tr th:each="task : ${tasks}">
+                <td th:text="${task.title}">Task Title</td>
+                <td><span class="badge" th:classappend="${task.status.name() == 'PENDING' ? 'bg-warning' : (task.status.name() == 'COMPLETED' ? 'bg-success' : 'bg-info')}" th:text="${task.status.displayName}">Status</span></td>
+                <td>
+                    <a th:href="@{/tasks/{id}(id=${task.id})}" class="btn btn-sm btn-primary">View</a>
+                    <a th:href="@{/tasks/{id}/edit(id=${task.id})}" class="btn btn-sm btn-secondary">Edit</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

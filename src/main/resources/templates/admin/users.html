@@ -1,0 +1,70 @@
+    <!DOCTYPE html>
+    <html lang="en" xmlns:th="http://www.thymeleaf.org"
+          xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+          xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+          layout:decorate="~{layout/base}">
+    <head>
+        <title>User Management</title>
+    </head>    <body>
+    <div layout:fragment="content">
+        <!-- ... header remains unchanged ... -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-users-cog me-2"></i>User Management</h1>
+            <a th:href="@{/admin}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Dashboard</a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover align-middle">
+                    <!-- ... table header remains unchanged ... -->
+                    <tbody>
+                    <tr th:each="user : ${users}" th:with="currentUser=${#authentication.principal.username}">
+                        <td th:text="${user.id}">1</td>
+                        <td th:text="${user.username}">user</td>
+                        <td th:text="${user.email}">user@example.com</td>
+                        <td>
+                            <!-- If this is the currently logged in admin -->
+                            <div th:if="${user.username == currentUser}">
+                                <span class="badge bg-primary" th:text="${user.role}">ADMIN</span>
+                                <small class="text-muted">(This is you)</small>
+                            </div>
+
+                            <!-- For all other users, show the form -->
+                            <form th:unless="${user.username == currentUser}"
+                                  th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post">
+                                <div class="input-group input-group-sm">
+                                    <select name="role" class="form-select" onchange="this.form.submit()">
+                                        <option th:each="roleOpt : ${roles}"
+                                                th:value="${roleOpt.name()}"
+                                                th:text="${roleOpt.name()}"
+                                                th:selected="${roleOpt == user.role}"></option>
+                                    </select>
+                                </div>
+                            </form>
+                        </td>
+                        <td>
+            <span class="badge"
+                  th:classappend="${user.enabled ? 'bg-success' : 'bg-danger'}"
+                  th:text="${user.enabled ? 'Active' : 'Disabled'}"></span>
+                        </td>
+                        <td class="text-end">
+                            <!-- Do not allow deleting yourself -->
+                            <form th:if="${user.username != currentUser}"
+                                  th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post" class="d-inline">
+                                <button type-="submit" class="btn btn-sm btn-outline-danger"
+                                        th:attr="data-bs-title='Delete user ' + ${user.username}"
+                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                        onclick="return confirm('Are you sure you want to delete user ' + this.getAttribute('data-username') + '?')"
+                                        th:data-username="${user.username}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </body>
+    </html>

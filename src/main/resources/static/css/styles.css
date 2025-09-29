@@ -1,0 +1,50 @@
+/* Global styles for a pleasant look */
+body {
+        background-color: #f8f9fa; /* Light gray background */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+/* Styles for cards to make them "float" on hover */
+.card {
+    border: none;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,.15) !important;
+}
+
+/* Style for the gradient button */
+.btn-primary {
+    background-image: linear-gradient(45deg, #0d6efd, #0d6efd);
+    border: none;
+    transition: transform 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+/* Style for status icons */
+.status-badge {
+    font-size: 0.9em;
+    padding: 0.4em 0.7em;
+    border-radius: 50px;
+    font-weight: 500;
+}
+
+.status-PENDING { background-color: #ffc107; color: #000; }
+.status-IN_PROGRESS { background-color: #0dcaf0; color: #000; }
+.status-COMPLETED { background-color: #198754; color: #fff; }
+.status-CANCELLED { background-color: #6c757d; color: #fff; }
+
+.footer {
+    margin-top: auto;
+}

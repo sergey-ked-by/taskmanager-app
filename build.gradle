@@ -1,0 +1,119 @@
+plugins {
+    // Apply the Java plugin to enable Java compilation and testing.
+    id 'java'
+    // Apply the Spring Boot plugin to enable Spring Boot features and tasks.
+    id 'org.springframework.boot' version '3.2.0'
+    // Apply the dependency-management plugin to manage transitive dependencies and versions.
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+// Define the group ID for the project's published artifacts.
+group = 'com.example'
+// Define the version of the project.
+version = '1.0.0'
+// Set the Java source compatibility level to Java 17.
+java.sourceCompatibility = JavaVersion.VERSION_17
+
+repositories {
+    // Configure Maven Central as the primary repository for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+    // --- Spring Boot Starters ---
+    // Web starter for building web, including RESTful, applications.
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Thymeleaf starter for server-side rendering of web pages.
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    // Thymeleaf Layout Dialect for creating reusable layout templates.
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+    // Security starter for authentication and authorization features.
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // JPA starter for using Spring Data JPA with Hibernate.
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Validation starter for declarative validation using Jakarta Bean Validation.
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // Actuator starter for monitoring and managing the application.
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Cache starter for enabling caching capabilities.
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    // Thymeleaf integration for Spring Security.
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+    // --- JWT (JSON Web Token) Libraries ---
+    // API for JWT creation and validation.
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    // Implementation of JWT for runtime.
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    // Jackson integration for JWT.
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    
+    // --- Database Drivers ---
+    // H2 Database for in-memory development and testing.
+    runtimeOnly 'com.h2database:h2'
+    // PostgreSQL JDBC driver for connecting to PostgreSQL databases.
+    runtimeOnly 'org.postgresql:postgresql'
+    
+    // --- OpenAPI Documentation ---
+    // SpringDoc OpenAPI starter for generating OpenAPI 3 (Swagger) documentation.
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    // --- Test Dependencies ---
+    // Spring Boot Test starter for comprehensive testing utilities.
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Spring Security Test for testing security-related features.
+    testImplementation 'org.springframework.security:spring-security-test'
+    // Annotation processor for Spring Boot configuration metadata.
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    // Flyway Core for database migration management.
+    implementation 'org.flywaydb:flyway-core'
+    // Lombok for reducing boilerplate code (e.g., getters, setters).
+    testImplementation 'org.projectlombok:lombok:1.18.30'
+    // Lombok annotation processor for test sources.
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Lombok for reducing boilerplate code in main sources.
+    implementation 'org.projectlombok:lombok:1.18.30'
+    // Lombok annotation processor for main sources.
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+
+configurations.all {
+    // Configure resolution strategies for all dependency configurations.
+    resolutionStrategy {
+        // Force a newer version of commons-lang3 to mitigate potential transitive dependency vulnerabilities.
+        // The CVE-2025-48924 warning for 3.13.0 might be a false positive or pre-disclosure,
+        // but forcing a newer, known-good version is a proactive security measure.
+        force 'org.apache.commons:commons-lang3:3.14.0'
+    }
+}
+
+test {
+    // Use JUnit Platform for running tests, enabling JUnit 5 features.
+    useJUnitPlatform()
+}
+
+jar {
+    // Disable the generation of the standard JAR file, as Spring Boot's bootJar is used instead.
+    enabled = false
+}
+
+// Register separate tasks for different types of tests using lazy registration.
+tasks.register('unitTest', Test) {
+    group = 'verification'
+    description = 'Runs all unit tests defined in the project.'
+    useJUnitPlatform {
+        // Include tests marked with the 'Unit' tag.
+        includeTags 'Unit'
+    }
+}
+
+tasks.named('test') {
+    // Disable the default 'test' task to ensure specific 'unitTest' and 'e2eTest' tasks are used.
+    enabled = false
+}
+
+tasks.named('check') {
+    // Make the 'check' task depend on 'unitTest' to ensure unit tests run as part of the 'check' lifecycle.
+    dependsOn(tasks.named('unitTest'))
+}

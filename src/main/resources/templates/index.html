@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
+<head><title>Home</title></head>
+<body>
+<div layout:fragment="content">
+    <div class="px-4 py-5 my-5 text-center">
+        <i class="fas fa-tasks fa-3x text-primary mb-3"></i>
+        <h1 class="display-5 fw-bold">Welcome to the Task Manager</h1>
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">
+                The best solution for organizing your work and life. Manage tasks effectively and achieve your goals faster!
+            </p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a th:href="@{/register}" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
+                <a th:href="@{/login}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
