@@ -25,13 +25,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push with Kaniko
-        uses: aevea/action-kaniko@v0.10.0
-        with:
-          # The image name in GHCR. It's recommended to use lowercase.
-          # ${{ github.repository }} resolves to "owner/repository-name"
-          image: ghcr.io/${{ github.repository }}
-          dockerfile: ./Dockerfile.app
-          # Build and push with two tags: the commit SHA and "latest"
-          tags: |
-            ${{ github.sha }}
-            latest
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -v /home/runner/.docker/config.json:/kaniko/.docker/config.json \
+            gcr.io/kaniko-project/executor:v1.12.1 \
+            --context=/workspace \
+            --dockerfile=/workspace/Dockerfile.app \
+            --destination=ghcr.io/${{ github.repository }}:${{ github.sha }} \
+            --destination=ghcr.io/${{ github.repository }}:latest
