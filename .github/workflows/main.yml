@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build, Push, and Trigger Tests
 
 on:
   push:
@@ -34,3 +34,22 @@ jobs:
             --dockerfile=/workspace/Dockerfile.app \
             --destination=ghcr.io/${{ github.repository }}:${{ github.sha }} \
             --destination=ghcr.io/${{ github.repository }}:latest
+
+  trigger-tests:
+     # This job runs after the image has been successfully built and pushed.
+     needs: build-and-push-image
+     runs-on: ubuntu-latest
+     steps:
+       - name: Trigger E2E tests
+         # This action sends a repository_dispatch event to the tests repository.
+         uses: peter-evans/repository-dispatch@v3
+         with:
+           # A Personal Access Token with the 'repo' scope is required.
+           token: ${{ secrets.PAT }}
+           # The repository to send the event to.
+           repository: sergey-ked-by/taskmanager-tests
+           # The type of event to send. The receiving workflow listens for this.
+           event-type: app-updated
+           # The payload to send with the event.
+           # We include the commit SHA so the test workflow knows which image tag to pull.
+           client-payload: '{"sha": "${{ github.sha }}"}'
