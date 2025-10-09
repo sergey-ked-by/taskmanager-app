@@ -27,10 +27,17 @@ jobs:
           role-to-assume: arn:aws:iam::533267189928:role/GitHubActionsTerragruntRole # ARN of the IAM role
           aws-region: eu-north-1 # Should match the region of your infrastructure
 
-      - name: Setup Terraform and Terragrunt
-        uses: autero1/action-terragrunt@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          terragrunt-version: 0.58.10 # Pinning version for consistency
+          terraform_version: 1.8.5 # Pinning Terraform version for consistency
+
+      - name: Setup Terragrunt
+        run: |
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v0.58.10/terragrunt_linux_amd64
+          mv terragrunt_linux_amd64 terragrunt
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
 
       - name: Terragrunt Plan
         id: plan
