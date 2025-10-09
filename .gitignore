@@ -27,3 +27,6 @@ target/
 *.zip
 *.tar.gz
 *.rar
+
+# Terragrunt cache
+**/.terragrunt-cache/

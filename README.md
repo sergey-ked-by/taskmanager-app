@@ -86,3 +86,59 @@ By default, the application uses an in-memory H2 database. You can configure it 
     *   `static`: Static assets (CSS, JS, images).
     *   `templates`: Thymeleaf templates for the web UI.
 *   `src/test/java`: Unit tests.
+
+---
+
+## Infrastructure as Code (IaC)
+
+This project includes a complete Infrastructure as Code setup using Terraform and Terragrunt to deploy the application environment to AWS.
+
+### Technology Stack
+
+*   **AWS**: The cloud provider for all infrastructure resources.
+*   **Terraform**: The core IaC tool used to define and create resources.
+*   **Terragrunt**: A thin wrapper for Terraform that provides extra tools for keeping configurations DRY (Don't Repeat Yourself) and managing remote state.
+
+### Directory Structure
+
+All infrastructure code resides in the `/terragrunt` directory:
+
+*   `terragrunt/root.hcl`: The root configuration file that defines the S3 remote state backend and is included by all environments.
+*   `terragrunt/modules/`: Contains reusable Terraform modules.
+    *   `vpc/`: A module to create a Virtual Private Cloud (VPC) with public and private subnets.
+*   `terragrunt/envs/`: Contains the environment-specific configurations.
+    *   `testing/`: Configuration for the **testing** environment.
+    *   `pre-prod/`: Configuration for the **pre-production** environment.
+
+### How to Deploy
+
+1.  **Prerequisites**:
+    *   Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) and [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/).
+    *   Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
+    *   Create the S3 bucket and DynamoDB table for the Terraform backend as described in the initial setup.
+
+2.  **Deployment**:
+    To deploy an environment, navigate to its directory and run the standard Terragrunt commands:
+
+    ```bash
+    # Navigate to the desired environment directory
+    cd terragrunt/envs/testing
+
+    # Initialize Terragrunt (configures backend and downloads providers)
+    terragrunt init
+
+    # See what changes will be made
+    terragrunt plan
+
+    # Apply the changes
+    terragrunt apply
+    ```
+
+### CI/CD Automation
+
+This repository is configured with a GitHub Actions workflow for infrastructure management:
+
+*   **Workflow File**: `.github/workflows/iac-plan.yml`
+*   **Trigger**: Runs on every Pull Request that modifies files within the `terragrunt/` directory.
+*   **Action**: The workflow runs `terragrunt run-all plan` to generate a Terraform plan for all environments (`testing` and `pre-prod`). The output of the plan is then automatically posted as a comment on the Pull Request.
+*   **Purpose**: This provides immediate visibility into the impact of infrastructure changes, allowing for safer and more transparent code reviews.
