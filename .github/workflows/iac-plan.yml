@@ -44,7 +44,7 @@ jobs:
       - name: Terragrunt Plan
         id: plan
         run: |
-          PLAN_OUTPUT=$(terragrunt run-all plan -no-color -input=false)
+          PLAN_OUTPUT=$(terragrunt run-all plan --terragrunt-non-interactive -no-color -input=false)
           echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
           echo "$PLAN_OUTPUT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
