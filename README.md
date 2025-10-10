@@ -142,3 +142,7 @@ This repository is configured with a GitHub Actions workflow for infrastructure 
 *   **Trigger**: Runs on every Pull Request that modifies files within the `terragrunt/` directory.
 *   **Action**: The workflow runs `terragrunt run-all plan` to generate a Terraform plan for all environments (`testing` and `pre-prod`). The output of the plan is then automatically posted as a comment on the Pull Request.
 *   **Purpose**: This provides immediate visibility into the impact of infrastructure changes, allowing for safer and more transparent code reviews.
+
+> **Note on Current Status:** As of October 2025, the automatic execution of `terragrunt plan` is blocked by restrictive Service Control Policies (SCPs) in the target AWS account, which deny `eks:CreateCluster` and `ec2:CreateNatGateway` permissions.
+> 
+> Due to this, the `iac-plan.yml` workflow has been changed to a **manual trigger** (`on: workflow_dispatch`). It will not run automatically on Pull Requests. It can be run manually from the GitHub Actions tab if the necessary permissions are granted in the AWS account in the future.
