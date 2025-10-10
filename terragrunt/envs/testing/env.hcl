@@ -10,11 +10,18 @@ locals {
 
   # A unique name for the environment, used for tagging and identification.
   environment = "testing"
-  # A unique name for the VPC resource.
+  
+  # --- VPC Variables ---
   vpc_name    = "testing-vpc"
-
   # Unique IP address range for this VPC to avoid conflicts with other VPCs (e.g., pre-prod).
   vpc_cidr_block           = "10.10.0.0/16"
   public_subnet_cidr_blocks  = ["10.10.1.0/24", "10.10.2.0/24", "10.10.3.0/24"]
   private_subnet_cidr_blocks = ["10.10.101.0/24", "10.10.102.0/24", "10.10.103.0/24"]
+
+  # --- EKS Variables ---
+  cluster_name   = "testing-eks-cluster"
+  instance_types = ["t3.medium"]
+  desired_size   = 2
+  max_size       = 3
+  min_size       = 1
 }
