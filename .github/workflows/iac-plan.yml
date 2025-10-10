@@ -2,12 +2,11 @@
 
 name: 'Terraform Plan on PR'
 
+# This workflow is triggered manually via the GitHub Actions UI.
+# It was changed from a pull_request trigger due to restrictive SCPs in the AWS account
+# that prevent `terraform plan` from succeeding automatically.
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'terragrunt/**'
+  workflow_dispatch:
 
 permissions:
   id-token: write   # Required for OIDC authentication with AWS
