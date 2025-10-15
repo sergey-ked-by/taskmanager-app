@@ -23,7 +23,7 @@ locals {
 
 # Infrastructure definition
 terraform {
-  source = "${find_in_parent_folders(".terragrunt-root")}/modules/azure-vnet"
+  source = "../../modules/azure-vnet"
 }
 
 # Pass variables from env.hcl to the module
