@@ -21,6 +21,17 @@ locals {
   env_vars = read_terragrunt_config("env.hcl")
 }
 
+# Generate a provider.tf file with the required azurerm provider configuration
+generate "provider" {
+  path      = "provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+provider "azurerm" {
+  features {}
+}
+EOF
+}
+
 # Infrastructure definition
 terraform {
   source = "../../modules/azure-vnet"
