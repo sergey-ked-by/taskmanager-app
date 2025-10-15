@@ -1,6 +1,12 @@
 
 # terragrunt/modules/azure-vnet/main.tf
 
+# Create the main resource group for the environment
+resource "azurerm_resource_group" "rg" {
+  name     = var.resource_group_name
+  location = var.location
+}
+
 # Create a Virtual Network (VNet)
 resource "azurerm_virtual_network" "vnet" {
   name                = var.vnet_name
