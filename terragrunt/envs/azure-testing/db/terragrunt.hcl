@@ -2,7 +2,7 @@
 # terragrunt.hcl for the database component
 
 include "root" {
-  path = find_in_parent_folders()
+  path = "../terragrunt.hcl"
 }
 
 # Указываем, что этот компонент зависит от сети (VNet).

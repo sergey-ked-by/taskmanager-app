@@ -28,6 +28,4 @@ EOF
 }
 
 # Read the environment-specific variables from env.hcl
-locals {
-  env_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
-}
+  path = "../terragrunt.hcl"
