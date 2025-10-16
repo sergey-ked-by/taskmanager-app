@@ -48,5 +48,5 @@ terraform {
 inputs = {
   vnet_name           = "vnet-testing"
   resource_group_name = "rg-taskmanager-testing"
-  location            = "eastus"
+  location            = "canadacentral"
 }
