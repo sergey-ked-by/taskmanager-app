@@ -32,6 +32,14 @@ resource "azurerm_subnet" "db_subnet" {
 
   # Add a Service Endpoint for PostgreSQL for secure database connections
   service_endpoints = ["Microsoft.Sql"]
+
+  delegation {
+    name = "fs"
+    service_delegation {
+      name    = "Microsoft.DBforPostgreSQL/flexibleServers"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 # Create a Private DNS Zone for PostgreSQL
