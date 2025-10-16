@@ -51,4 +51,5 @@ inputs = {
 
   # Get the subnet ID from the vnet module's outputs
   delegated_subnet_id = dependency.vnet.outputs.db_subnet_id
+  private_dns_zone_id = dependency.vnet.outputs.private_dns_zone_id
 }

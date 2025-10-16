@@ -33,3 +33,17 @@ resource "azurerm_subnet" "db_subnet" {
   # Add a Service Endpoint for PostgreSQL for secure database connections
   service_endpoints = ["Microsoft.Sql"]
 }
+
+# Create a Private DNS Zone for PostgreSQL
+resource "azurerm_private_dns_zone" "postgres_dns_zone" {
+  name                = "${var.vnet_name}.private.postgres.database.azure.com"
+  resource_group_name = var.resource_group_name
+}
+
+# Link the Private DNS Zone to the Virtual Network
+resource "azurerm_private_dns_zone_virtual_network_link" "vnet_link" {
+  name                  = "${var.vnet_name}-postgres-dns-link"
+  resource_group_name   = var.resource_group_name
+  private_dns_zone_name = azurerm_private_dns_zone.postgres_dns_zone.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}

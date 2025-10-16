@@ -21,6 +21,11 @@ variable "delegated_subnet_id" {
   type        = string
 }
 
+variable "private_dns_zone_id" {
+  description = "The ID of the Private DNS Zone to associate with the server."
+  type        = string
+}
+
 variable "admin_login" {
   description = "The administrator login name for the PostgreSQL server."
   type        = string
