@@ -44,7 +44,7 @@ terraform {
 
 # 5. Inputs for the module
 inputs = {
-  server_name         = "psql-testing-${get_random_suffix()}"
+  server_name         = "psql-testing-${formatdate("YYYYMMDDhhmmss", timestamp())}"
   resource_group_name = "rg-taskmanager-testing"
   location            = "westeurope"
   db_name             = "taskmanagerdb"
