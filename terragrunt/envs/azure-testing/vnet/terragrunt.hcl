@@ -33,7 +33,7 @@ EOF
 
 # 3. Module Source
 terraform {
-  source = "../../modules/azure-vnet"
+  source = "../../../modules/azure-vnet"
 }
 
 # 4. Inputs for the module
