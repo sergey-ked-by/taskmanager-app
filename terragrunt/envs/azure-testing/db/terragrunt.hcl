@@ -46,7 +46,7 @@ terraform {
 inputs = {
   server_name         = "psql-testing-${formatdate("YYYYMMDDhhmmss", timestamp())}"
   resource_group_name = "rg-taskmanager-testing"
-  location            = "westeurope"
+  location            = "eastus"
   db_name             = "taskmanagerdb"
 
   # Get the subnet ID from the vnet module's outputs
