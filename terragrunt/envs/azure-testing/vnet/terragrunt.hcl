@@ -1,6 +1,9 @@
-# Root terragrunt.hcl for the azure-testing environment
 
-# Configure remote state storage for Terraform in an Azure Storage Account
+# terragrunt.hcl for the vnet component
+
+# All configuration is now in this file
+
+# 1. Backend Configuration
 remote_state {
   backend = "azurerm"
   generate = {
@@ -11,11 +14,12 @@ remote_state {
     resource_group_name  = "rg-taskmanager-tfstate"
     storage_account_name = "rgaccountnamesergeykedby"
     container_name       = "tfstate"
-    key                  = "${path_relative_to_include()}/terraform.tfstate"
+    # The key is now unique for each component
+    key                  = "vnet.tfstate"
   }
 }
 
-# Generate a provider.tf file with the required azurerm provider configuration
+# 2. Provider Configuration
 generate "provider" {
   path      = "provider.tf"
   if_exists = "overwrite_terragrunt"
@@ -27,5 +31,14 @@ provider "azurerm" {
 EOF
 }
 
-# Read the environment-specific variables from env.hcl
-  path = "../terragrunt.hcl"
+# 3. Module Source
+terraform {
+  source = "../../modules/azure-vnet"
+}
+
+# 4. Inputs for the module
+inputs = {
+  vnet_name           = "vnet-testing"
+  resource_group_name = "rg-taskmanager-testing"
+  location            = "westeurope"
+}

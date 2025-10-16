@@ -24,5 +24,5 @@ output "admin_login" {
 output "admin_password" {
   description = "The admin password for the database. This is a sensitive value."
   value       = random_password.password.result
-  sensitive   = true # Помечаем пароль как чувствительные данные
+  sensitive   = true # Mark the password as a sensitive value
 }
