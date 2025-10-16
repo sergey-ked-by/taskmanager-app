@@ -15,7 +15,7 @@ resource "azurerm_postgresql_flexible_server" "postgres_server" {
   location               = var.location
   version                = "14" # PostgreSQL version
   delegated_subnet_id    = var.delegated_subnet_id
-  private_dns_zone_id    = "None" # For simplicity, we won't use a private DNS zone
+  private_dns_zone_id    = null   # For simplicity, we won't use a private DNS zone
 
   administrator_login    = var.admin_login
   administrator_password = random_password.password.result
