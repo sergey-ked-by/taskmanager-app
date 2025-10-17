@@ -59,18 +59,18 @@ jobs:
       # Before applying the manifests, we need to inject real, dynamic values into them.
       - name: Update Kubernetes manifests
         run: |
-          # Use the `sed` command to find and replace the placeholder image name in the deployment file
-          # with the real image URL and tag we just built and pushed.
-          sed -i 's|YOUR_ACR_LOGIN_SERVER/taskmanager-app:latest|${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|' k8s/deployment.yaml
+          # Use the `sed` command with a `#` delimiter for robustness.
+          sed -i 's#YOUR_ACR_LOGIN_SERVER/taskmanager-app:latest#${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}#' k8s/deployment.yaml
 
           # For the secret manifest, we must base64-encode our secret values, as required by Kubernetes.
-          # We read the secrets from GitHub Actions secrets, encode them, and use `sed` to replace the placeholders.
-          DB_HOST_B64=$(echo -n "${{ secrets.DB_HOST }}" | base64)
-          DB_USER_B64=$(echo -n "pgadmin" | base64) # The username is static, but still needs to be encoded.
-          DB_PASSWORD_B64=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64)
-          sed -i "s|db-host: .*|db-host: ${DB_HOST_B64}|" k8s/secret.yaml
-          sed -i "s|db-user: .*|db-user: ${DB_USER_B64}|" k8s/secret.yaml
-          sed -i "s|db-password: .*|db-password: ${DB_PASSWORD_B64}|" k8s/secret.yaml
+          # We use the `-w 0` flag for `base64` to prevent line wrapping, which breaks the `sed` command.
+          DB_URL=$(echo -n "jdbc:postgresql://${{ secrets.DB_HOST }}:5432/taskmanager")
+          DB_URL_B64=$(echo -n "$DB_URL" | base64 -w 0)
+          DB_USER_B64=$(echo -n "pgadmin" | base64 -w 0)
+          DB_PASSWORD_B64=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 -w 0)
+          sed -i "s#db-url: .*#db-url: ${DB_URL_B64}#" k8s/secret.yaml
+          sed -i "s#db-user: .*#db-user: ${DB_USER_B64}#" k8s/secret.yaml
+          sed -i "s#db-password: .*#db-password: ${DB_PASSWORD_B64}#" k8s/secret.yaml
 
       # Step 6: Set up kubectl context
       # This action logs into our specific AKS cluster and configures the `kubectl` command-line tool
@@ -81,7 +81,19 @@ jobs:
           resource-group: ${{ env.RESOURCE_GROUP_NAME }}
           cluster-name: ${{ env.AKS_CLUSTER_NAME }}
 
-      # Step 7: Deploy to AKS
+      # Step 7: Create or update the image pull secret in Kubernetes
+      # This uses the ACR credentials to create a secret that Pods can use to authenticate with ACR.
+      # We use --dry-run to check if it exists, and create or patch accordingly.
+      - name: Create/Update Image Pull Secret
+        run: |
+          kubectl create secret docker-registry acr-secret \
+            --docker-server=${{ secrets.ACR_LOGIN_SERVER }} \
+            --docker-username=${{ secrets.ACR_USERNAME }} \
+            --docker-password=${{ secrets.ACR_PASSWORD }} \
+            --docker-email=no-reply@example.com \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      # Step 8: Deploy to AKS
       # This is the final deployment step. `kubectl apply -f k8s/` tells Kubernetes to take all the .yaml
       # files in the `k8s` directory and create or update the resources in the cluster to match the definitions.
       - name: Deploy to AKS

@@ -26,6 +26,9 @@ spec:
       labels:
         app: taskmanager-app
     spec:
+      # Add this section to specify the secret to use for pulling the image from the private registry.
+      imagePullSecrets:
+        - name: acr-secret
       # A Pod can contain one or more containers. We have one for our application.
       containers:
         - name: taskmanager-app-container
@@ -41,32 +44,27 @@ spec:
           # Environment variables that will be injected into the running container.
           # We use these to pass database connection details to the Spring Boot application.
           env:
-            # The full JDBC URL for the database connection.
-            # It uses another environment variable, $(DB_HOST), which we define below.
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://$(DB_HOST):5432/taskmanagerdb"
+            # Activate the 'docker' profile to use PostgreSQL settings
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
 
-            # The database username.
-            # Instead of writing the value directly, we fetch it from a Kubernetes Secret.
+            # The full JDBC URL for the database connection, fetched directly from the secret.
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: db-url
+
+            # The database username, fetched from the same Secret.
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  # This is the name of the Secret object we will create.
                   name: postgres-secret
-                  # This is the key within the Secret whose value we want to use.
                   key: db-user
 
-            # The database password, also fetched from the same Secret for security.
+            # The database password, also fetched from the same Secret.
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: db-password
-
-            # A helper environment variable to hold the database host FQDN.
-            # This is also fetched from the Secret and used by SPRING_DATASOURCE_URL above.
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: db-host
