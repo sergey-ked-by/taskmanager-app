@@ -89,60 +89,52 @@ By default, the application uses an in-memory H2 database. You can configure it 
 
 ---
 
-## Infrastructure as Code (IaC)
+## Azure Deployment (Internship Project)
 
-This project includes a complete Infrastructure as Code setup using Terraform and Terragrunt to deploy the application environment to AWS.
+This project is configured for a full CI/CD deployment to **Microsoft Azure** using Infrastructure as Code (IaC) and GitHub Actions.
+
+> **Note:** The infrastructure for this project is running on a limited-time Azure Free Trial account. It is expected to be decommissioned and will go offline after **November 15, 2025**.
 
 ### Technology Stack
 
-*   **AWS**: The cloud provider for all infrastructure resources.
-*   **Terraform**: The core IaC tool used to define and create resources.
-*   **Terragrunt**: A thin wrapper for Terraform that provides extra tools for keeping configurations DRY (Don't Repeat Yourself) and managing remote state.
+- **Cloud Provider**: Microsoft Azure
+- **IaC Tooling**: Terraform with Terragrunt wrapper
+- **Container Registry**: Azure Container Registry (ACR)
+- **Database**: Azure Database for PostgreSQL (Flexible Server)
+- **Orchestration**: Azure Kubernetes Service (AKS)
+- **CI/CD**: GitHub Actions
 
-### Directory Structure
+### Infrastructure
 
-All infrastructure code resides in the `/terragrunt` directory:
+The entire cloud infrastructure is defined in the `/terragrunt` directory and is broken down into modular components:
 
-*   `terragrunt/root.hcl`: The root configuration file that defines the S3 remote state backend and is included by all environments.
-*   `terragrunt/modules/`: Contains reusable Terraform modules.
-    *   `vpc/`: A module to create a Virtual Private Cloud (VPC) with public and private subnets.
-*   `terragrunt/envs/`: Contains the environment-specific configurations.
-    *   `testing/`: Configuration for the **testing** environment.
-    *   `pre-prod/`: Configuration for the **pre-production** environment.
+- `vnet`: Creates the virtual network, subnets, and private DNS zone.
+- `db`: Creates the PostgreSQL server and database within the VNet.
+- `acr`: Creates the Azure Container Registry for storing Docker images.
+- `aks`: Creates the Kubernetes cluster, configured to run in the VNet and pull images from ACR.
 
-### How to Deploy
-
-1.  **Prerequisites**:
-    *   Install [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) and [Terragrunt](https://terragrunt.gruntwork.io/docs/getting-started/install/).
-    *   Configure your [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
-    *   Create the S3 bucket and DynamoDB table for the Terraform backend as described in the initial setup.
-
-2.  **Deployment**:
-    To deploy an environment, navigate to its directory and run the standard Terragrunt commands:
-
-    ```bash
-    # Navigate to the desired environment directory
-    cd terragrunt/envs/testing
-
-    # Initialize Terragrunt (configures backend and downloads providers)
-    terragrunt init
-
-    # See what changes will be made
-    terragrunt plan
-
-    # Apply the changes
-    terragrunt apply
-    ```
+Each component can be deployed manually by navigating to its directory (e.g., `terragrunt/envs/azure-testing/vnet`) and running `terragrunt apply`.
 
 ### CI/CD Automation
 
-This repository is configured with a GitHub Actions workflow for infrastructure management:
+The repository contains a fully automated CI/CD pipeline defined in `.github/workflows/deploy-to-aks.yml`.
 
-*   **Workflow File**: `.github/workflows/iac-plan.yml`
-*   **Trigger**: Runs on every Pull Request that modifies files within the `terragrunt/` directory.
-*   **Action**: The workflow runs `terragrunt run-all plan` to generate a Terraform plan for all environments (`testing` and `pre-prod`). The output of the plan is then automatically posted as a comment on the Pull Request.
-*   **Purpose**: This provides immediate visibility into the impact of infrastructure changes, allowing for safer and more transparent code reviews.
+**Trigger**: The workflow runs automatically on every `push` to the `main` branch.
 
-> **Note on Current Status:** As of October 2025, the automatic execution of `terragrunt plan` is blocked by restrictive Service Control Policies (SCPs) in the target AWS account, which deny `eks:CreateCluster` and `ec2:CreateNatGateway` permissions.
-> 
-> Due to this, the `iac-plan.yml` workflow has been changed to a **manual trigger** (`on: workflow_dispatch`). It will not run automatically on Pull Requests. It can be run manually from the GitHub Actions tab if the necessary permissions are granted in the AWS account in the future.
+**Process**:
+1.  **Login**: The workflow authenticates with Azure using a Service Principal.
+2.  **Build & Push**: It builds the Java application's Docker image and pushes it to the project's private Azure Container Registry (ACR), tagging it with the commit SHA.
+3.  **Prepare Manifests**: It dynamically updates the Kubernetes manifests in the `/k8s` directory, injecting the new image tag and database credentials (from GitHub Secrets).
+4.  **Deploy**: It connects to the AKS cluster and applies the updated manifests, triggering a rolling update of the application.
+
+### Accessing the Deployed Application
+
+After the `deploy-to-aks.yml` workflow completes successfully, it may take a few minutes for the Azure Load Balancer to provision a public IP address.
+
+To find the public IP, you can run the following `kubectl` command (after configuring access to the cluster):
+
+```bash
+kubectl get service taskmanager-app-service --watch
+```
+
+Once the `EXTERNAL-IP` changes from `<pending>` to an IP address, you can access the application by navigating to that IP in your web browser.

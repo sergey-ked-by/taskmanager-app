@@ -1,0 +1,87 @@
+
+# This workflow defines the project's Continuous Integration and Continuous Deployment (CI/CD) pipeline.
+name: Build and Deploy to AKS
+
+# This workflow is configured to run under two conditions:
+# 1. On every `push` event to the `main` branch.
+# 2. Manually, via the `workflow_dispatch` event (using the 'Run workflow' button in the GitHub Actions UI).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+# Environment variables available to all jobs and steps in the workflow.
+# This makes the script cleaner and easier to manage.
+env:
+  AKS_CLUSTER_NAME: aks-taskmanager-testing
+  RESOURCE_GROUP_NAME: rg-taskmanager-testing
+  IMAGE_NAME: taskmanager-app
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out the repository code
+      # This action downloads the source code into the runner environment.
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to Azure
+      # This uses the Service Principal credentials stored in the AZURE_CREDENTIALS GitHub secret
+      # to authenticate with Azure. OIDC is used for a secure, passwordless login.
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 3: Log in to Azure Container Registry (ACR)
+      # This authenticates the Docker client in the runner environment against our private registry in Azure.
+      - name: ACR Login
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+
+      # Step 4: Build and push the Docker image to ACR
+      # This step builds the Dockerfile.app and pushes the resulting image to our ACR.
+      # We tag the image with the unique Git commit SHA for versioning and traceability.
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.app
+          push: true
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      # Step 5: Update Kubernetes manifests with dynamic values
+      # Before applying the manifests, we need to inject real, dynamic values into them.
+      - name: Update Kubernetes manifests
+        run: |
+          # Use the `sed` command to find and replace the placeholder image name in the deployment file
+          # with the real image URL and tag we just built and pushed.
+          sed -i 's|YOUR_ACR_LOGIN_SERVER/taskmanager-app:latest|${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}|' k8s/deployment.yaml
+
+          # For the secret manifest, we must base64-encode our secret values, as required by Kubernetes.
+          # We read the secrets from GitHub Actions secrets, encode them, and use `sed` to replace the placeholders.
+          DB_HOST_B64=$(echo -n "${{ secrets.DB_HOST }}" | base64)
+          DB_USER_B64=$(echo -n "pgadmin" | base64) # The username is static, but still needs to be encoded.
+          DB_PASSWORD_B64=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64)
+          sed -i "s|db-host: .*|db-host: ${DB_HOST_B64}|" k8s/secret.yaml
+          sed -i "s|db-user: .*|db-user: ${DB_USER_B64}|" k8s/secret.yaml
+          sed -i "s|db-password: .*|db-password: ${DB_PASSWORD_B64}|" k8s/secret.yaml
+
+      # Step 6: Set up kubectl context
+      # This action logs into our specific AKS cluster and configures the `kubectl` command-line tool
+      # to communicate with it. From this point on, `kubectl` commands will target our cluster.
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP_NAME }}
+          cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+      # Step 7: Deploy to AKS
+      # This is the final deployment step. `kubectl apply -f k8s/` tells Kubernetes to take all the .yaml
+      # files in the `k8s` directory and create or update the resources in the cluster to match the definitions.
+      - name: Deploy to AKS
+        run: |
+          kubectl apply -f k8s/
