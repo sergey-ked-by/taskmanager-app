@@ -1,9 +1,10 @@
 
 # terragrunt.hcl for the database component
 
-# All configuration is now in this file
+# This block contains the full, self-contained configuration for this component.
 
-# 1. Backend Configuration (same, but with a different key)
+# 1. Backend Configuration
+# We use the same storage account as the vnet component, but a different key.
 remote_state {
   backend = "azurerm"
   generate = {
@@ -14,12 +15,13 @@ remote_state {
     resource_group_name  = "rg-taskmanager-tfstate"
     storage_account_name = "rgaccountnamesergeykedby"
     container_name       = "tfstate"
-    # The key is now unique for each component
+    # Using a unique key ensures that the state for the DB doesn't overwrite the state for the VNet.
     key                  = "db.tfstate"
   }
 }
 
-# 2. Provider Configuration (the same)
+# 2. Provider Configuration
+# This is identical to the vnet component's provider configuration.
 generate "provider" {
   path      = "provider.tf"
   if_exists = "overwrite_terragrunt"
@@ -40,7 +42,8 @@ EOF
 }
 
 # 3. Dependency on the Virtual Network (VNet)
-# Terragrunt will first apply the VNet, then take the required IDs from its outputs.
+# This block tells Terragrunt that the DB component depends on the VNet component.
+# Terragrunt will automatically find the outputs from the vnet state file and make them available.
 dependency "vnet" {
   config_path = "../vnet"
 }
@@ -57,7 +60,8 @@ inputs = {
   location            = "canadacentral"
   db_name             = "taskmanagerdb"
 
-  # Get the subnet ID from the vnet module's outputs
+  # Get the subnet ID and DNS zone ID from the vnet module's outputs.
+  # This is how we link the database to the network.
   delegated_subnet_id = dependency.vnet.outputs.db_subnet_id
   private_dns_zone_id = dependency.vnet.outputs.private_dns_zone_id
 }

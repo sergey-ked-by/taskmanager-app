@@ -30,3 +30,4 @@ target/
 
 # Terragrunt cache
 **/.terragrunt-cache/
+.terraform.lock.hcl
