@@ -81,7 +81,19 @@ jobs:
           resource-group: ${{ env.RESOURCE_GROUP_NAME }}
           cluster-name: ${{ env.AKS_CLUSTER_NAME }}
 
-      # Step 7: Deploy to AKS
+      # Step 7: Create or update the image pull secret in Kubernetes
+      # This uses the ACR credentials to create a secret that Pods can use to authenticate with ACR.
+      # We use --dry-run to check if it exists, and create or patch accordingly.
+      - name: Create/Update Image Pull Secret
+        run: |
+          kubectl create secret docker-registry acr-secret \
+            --docker-server=${{ secrets.ACR_LOGIN_SERVER }} \
+            --docker-username=${{ secrets.ACR_USERNAME }} \
+            --docker-password=${{ secrets.ACR_PASSWORD }} \
+            --docker-email=no-reply@example.com \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      # Step 8: Deploy to AKS
       # This is the final deployment step. `kubectl apply -f k8s/` tells Kubernetes to take all the .yaml
       # files in the `k8s` directory and create or update the resources in the cluster to match the definitions.
       - name: Deploy to AKS

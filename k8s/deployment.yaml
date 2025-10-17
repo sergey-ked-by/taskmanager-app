@@ -26,6 +26,9 @@ spec:
       labels:
         app: taskmanager-app
     spec:
+      # Add this section to specify the secret to use for pulling the image from the private registry.
+      imagePullSecrets:
+        - name: acr-secret
       # A Pod can contain one or more containers. We have one for our application.
       containers:
         - name: taskmanager-app-container
