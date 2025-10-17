@@ -1,0 +1,27 @@
+
+# This is a Kubernetes Service manifest.
+# A Service defines a logical set of Pods and a policy by which to access them.
+
+apiVersion: v1
+kind: Service
+metadata:
+  # The name of the Service
+  name: taskmanager-app-service
+spec:
+  # The type of the Service. 
+  # 'LoadBalancer' creates an external load balancer in the cloud provider (Azure).
+  # This will give us a public IP address to access the application.
+  type: LoadBalancer
+
+  # The ports configuration for the Service.
+  ports:
+    - protocol: TCP
+      # The port that the external load balancer will listen on.
+      port: 80
+      # The port on the Pods that traffic will be forwarded to.
+      targetPort: 8080
+
+  # This selector determines which Pods will receive traffic from this Service.
+  # It must match the labels of the Pods defined in our Deployment.
+  selector:
+    app: taskmanager-app
