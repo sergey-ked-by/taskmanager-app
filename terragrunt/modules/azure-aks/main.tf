@@ -14,18 +14,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     vnet_subnet_id = var.vnet_subnet_id
   }
 
-  # Use a system-assigned managed identity for simplicity
   identity {
     type = "SystemAssigned"
-  }
-
-  # Configure AKS to use our private container registry (ACR)
-  # This gives the cluster permissions to pull images from ACR.
-  addon_profile {
-    acra {
-      enabled = true
-      acr_registry_id = var.acr_registry_id
-    }
   }
 
   # Network settings
@@ -34,4 +24,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     service_cidr   = "10.0.3.0/24"
     dns_service_ip = "10.0.3.10"
   }
+}
+
+# Create a role assignment to allow the AKS cluster to pull images from the ACR
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = var.acr_registry_id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
 }
